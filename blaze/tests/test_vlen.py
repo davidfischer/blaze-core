@@ -91,6 +91,8 @@ class TestVlenDatashape(unittest.TestCase):
 
 tests.append(TestVlenDatashape)
 
+#------------------------------------------------------------------------
+
 def run(verbosity=1, repeat=1):
     suite = unittest.TestSuite()
     for cls in tests:
