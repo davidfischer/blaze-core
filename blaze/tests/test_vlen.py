@@ -3,83 +3,102 @@ Tests for the blob data type.
 """
 
 import blaze
+import unittest
 import tempfile, shutil, os.path
 
+tests = []
 
-def test_simple_blob():
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array(["s1", "sss2"], ds)
+class TestVlenDatashape(unittest.TestCase):
 
-    assert c[0] == "s1"
-    assert c[1] == "sss2"
+    def test_simple_blob(self):
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array(["s1", "sss2"], ds)
 
-def test_simple_persistent_blob():
-    td = tempfile.mkdtemp()
-    tmppath = os.path.join(td, 'c')
+        self.assertEqual( c[0] , "s1" )
+        self.assertEqual( c[1] , "sss2" )
 
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array(["s1", "sss2"], ds,
-                    params=blaze.params(storage=tmppath))
+    def test_simple_persistent_blob(self):
+        td = tempfile.mkdtemp()
+        tmppath = os.path.join(td, 'c')
 
-    assert c[0] == "s1"
-    assert c[1] == "sss2"
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array(["s1", "sss2"], ds,
+                        params=blaze.params(storage=tmppath))
 
-    # Remove everything under the temporary dir
-    shutil.rmtree(td)
+        self.assertEqual( c[0] , "s1" )
+        self.assertEqual( c[1] , "sss2" )
 
-def test_object_blob():
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array([(i, str(i*.2)) for i in range(10)], ds)
+        # Remove everything under the temporary dir
+        shutil.rmtree(td)
 
-    for i, v in enumerate(c):
-        assert v[0] == i
-        assert v[1] == str(i*.2)
+    def test_object_blob(self):
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array([(i, str(i*.2)) for i in range(10)], ds)
 
-def test_object_unicode():
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array([u'a'*i for i in range(10)], ds)
+        for i, v in enumerate(c):
+            self.assertEqual( v[0] , i )
+            self.assertEqual( v[1] , str(i*.2) )
 
-    for i, v in enumerate(c):
-        # The outcome are 0-dim arrays (that might change in the future)
-        assert v[()] == u'a'*i
+    def test_object_unicode(self):
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array([u'a'*i for i in range(10)], ds)
 
-def test_object_persistent_blob():
-    td = tempfile.mkdtemp()
-    tmppath = os.path.join(td, 'c')
+        for i, v in enumerate(c):
+            # The outcome are 0-dim arrays (that might change in the future)
+            self.assertEqual( v[()] , u'a'*i )
 
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array([(i, str(i*.2)) for i in range(10)], ds,
-                    params=blaze.params(storage=tmppath))
+    def test_object_persistent_blob(self):
+        td = tempfile.mkdtemp()
+        tmppath = os.path.join(td, 'c')
 
-    for i, v in enumerate(c):
-        assert v[0] == i
-        assert v[1] == str(i*.2)
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array([(i, str(i*.2)) for i in range(10)], ds,
+                        params=blaze.params(storage=tmppath))
 
-    # Remove everything under the temporary dir
-    shutil.rmtree(td)
+        for i, v in enumerate(c):
+            self.assertEqual( v[0] ,  i )
+            self.assertEqual( v[1] , str(i*.2) )
 
-def test_object_persistent_blob_reopen():
-    td = tempfile.mkdtemp()
-    tmppath = os.path.join(td, 'c')
+        # Remove everything under the temporary dir
+        shutil.rmtree(td)
 
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array([(i, "s"*i) for i in range(10)], ds,
-                    params=blaze.params(storage=tmppath))
+    def test_object_persistent_blob_reopen(self):
+        td = tempfile.mkdtemp()
+        tmppath = os.path.join(td, 'c')
 
-    c2 = blaze.open(tmppath)
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array([(i, "s"*i) for i in range(10)], ds,
+                        params=blaze.params(storage=tmppath))
 
-    for i, v in enumerate(c2):
-        assert v[0] == i
-        assert v[1] == "s"*i
+        c2 = blaze.open(tmppath)
 
-    # Remove everything under the temporary dir
-    shutil.rmtree(td)
+        for i, v in enumerate(c2):
+            self.assertEqual( v[0] , i )
+            self.assertEqual( v[1] , "s"*i )
 
-def test_intfloat_blob():
-    ds = blaze.dshape('x, blob')
-    c = blaze.Array([(i, i*.2) for i in range(10)], ds)
+        # Remove everything under the temporary dir
+        shutil.rmtree(td)
 
-    for i, v in enumerate(c):
-        print "v:", v, v[0], type(v[0])
-        assert v[0] == i
-        assert v[1] == i*.2
+    def test_intfloat_blob(self):
+        ds = blaze.dshape('x, blob')
+        c = blaze.Array([(i, i*.2) for i in range(10)], ds)
+
+        for i, v in enumerate(c):
+            #print "v:", v, v[0], type(v[0])
+            self.assertEqual( v[0] , i )
+            self.assertEqual( v[1] , i*.2)
+
+
+tests.append(TestVlenDatashape)
+
+def run(verbosity=1, repeat=1):
+    suite = unittest.TestSuite()
+    for cls in tests:
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    return runner.run(suite)
+
+if __name__ == '__main__':
+    run()
