@@ -8,6 +8,8 @@ import tempfile, shutil, os.path
 
 tests = []
 
+#------------------------------------------------------------------------
+
 class TestVlenDatashape(unittest.TestCase):
 
     def test_simple_blob(self):
