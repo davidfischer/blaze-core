@@ -15,56 +15,56 @@ class TestDatashapeParser(unittest.TestCase):
         x = parse('2, 3, int32')
         y = parse('300 , 400, {x: int64; y: int32}')
 
-        assert type(x) == DataShape
-        assert type(y) == DataShape
+        self.assertEqual(type(x) , DataShape)
+        self.assertEqual(type(y) , DataShape)
 
-        assert type(y[0]) == Fixed
-        assert type(y[1]) == Fixed
-        assert type(y[2]) == Record
+        self.assertEqual(type(y[0]) , Fixed)
+        self.assertEqual(type(y[1]) , Fixed)
+        self.assertEqual(type(y[2]) , Record)
 
         rec = y[2]
 
-        assert rec['x'] == int64
-        assert rec['y'] == int32
+        self.assertEqual( rec['x'] , int64)
+        self.assertEqual( rec['y'] , int32)
 
     def test_compound_record1(self):
         p = parse('6, {x:int32; y:float64; z:string}')
 
-        assert type(p[0]) == Fixed
-        assert type(p[1]) == Record
+        self.assertEqual(type(p[0]) , Fixed)
+        self.assertEqual(type(p[1]) , Record)
 
     def test_compound_record2(self):
         p = parse('{ a: { x: int; y: int }; b: {w: int; u: int } }')
 
-        assert type(p) == Record
+        self.assertEqual(type(p) , Record)
 
     def test_free_variables(self):
         p = parse('N, M, 800, 600, int32')
 
-        assert type(p[0]) == TypeVar
-        assert type(p[1]) == TypeVar
-        assert type(p[2]) == Fixed
-        assert type(p[3]) == Fixed
-        assert type(p[4]) == CType
+        self.assertEqual( type(p[0]) , TypeVar)
+        self.assertEqual( type(p[1]) , TypeVar)
+        self.assertEqual( type(p[2]) , Fixed)
+        self.assertEqual( type(p[3]) , Fixed)
+        self.assertEqual( type(p[4]) , CType)
 
     def test_parse_equality(self):
         x = parse('800, 600, int64')
         y = parse('800, 600, int64')
 
-        assert x._equal(y)
+        self.assertTrue( x._equal(y) )
 
     def test_parse_vars(self):
         x = parse('Range(1,2), int32')
 
-        assert x[0].lower == 1
-        assert x[0].upper == 2
+        self.assertEqual( x[0].lower , 1)
+        self.assertEqual( x[0].upper , 2)
 
     def test_parse_either(self):
         x = parse('Either(int64, float64)')
 
-        assert type(x) == Either
-        assert x.a == int64
-        assert x.b == float64
+        self.assertEqual(type(x) , Either)
+        self.assertEqual(x.a , int64)
+        self.assertEqual(x.b , float64)
 
     def test_custom_record(self):
 
