@@ -24,8 +24,8 @@ class TestDatashapeParser(unittest.TestCase):
 
         rec = y[2]
 
-        self.assertEqual( rec['x'] , int64)
-        self.assertEqual( rec['y'] , int32)
+        self.assertEqual(rec['x'] , int64)
+        self.assertEqual(rec['y'] , int32)
 
     def test_compound_record1(self):
         p = parse('6, {x:int32; y:float64; z:string}')
@@ -41,23 +41,23 @@ class TestDatashapeParser(unittest.TestCase):
     def test_free_variables(self):
         p = parse('N, M, 800, 600, int32')
 
-        self.assertEqual( type(p[0]) , TypeVar)
-        self.assertEqual( type(p[1]) , TypeVar)
-        self.assertEqual( type(p[2]) , Fixed)
-        self.assertEqual( type(p[3]) , Fixed)
-        self.assertEqual( type(p[4]) , CType)
+        self.assertEqual(type(p[0]) , TypeVar)
+        self.assertEqual(type(p[1]) , TypeVar)
+        self.assertEqual(type(p[2]) , Fixed)
+        self.assertEqual(type(p[3]) , Fixed)
+        self.assertEqual(type(p[4]) , CType)
 
     def test_parse_equality(self):
         x = parse('800, 600, int64')
         y = parse('800, 600, int64')
 
-        self.assertTrue( x._equal(y) )
+        self.assertTrue(x._equal(y) )
 
     def test_parse_vars(self):
         x = parse('Range(1,2), int32')
 
-        self.assertEqual( x[0].lower , 1)
-        self.assertEqual( x[0].upper , 2)
+        self.assertEqual(x[0].lower , 1)
+        self.assertEqual(x[0].upper , 2)
 
     def test_parse_either(self):
         x = parse('Either(int64, float64)')
@@ -79,8 +79,6 @@ class TestDatashapeParser(unittest.TestCase):
             @derived('int64')
             def mid(self):
                 return (self.min + self.max)/2
-
-        assert Stock1.mid
 
     def test_fields_with_reserved_names(self):
         # Should be able to name a field 'type', 'int64'

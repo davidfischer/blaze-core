@@ -1,3 +1,4 @@
+import unittest
 import os.path
 
 from blaze.test_utils import temp_dir
@@ -8,38 +9,60 @@ from blaze import dshape
 from blaze.sources.chunked import CArraySource, CTableSource
 from blaze.eclass import eclass
 
-def test_open_carray():
-    with temp_dir() as temp:
-        # Create an array on disk
-        array_filename = os.path.join(temp, 'carray')
-        p = params(storage=array_filename)
-        ds = dshape('1,int32')
-        a = CArraySource([2], dshape=ds, params=p)
-        del a
+tests = []
 
-        # Open array with open function
-        uri = 'carray://' + array_filename
-        c = toplevel.open(uri)
-        assert c.datashape == ds
+#------------------------------------------------------------------------
 
-        # Test delayed mode
-        c = toplevel.open(uri, eclass=eclass.delayed)
-        assert c.datashape == ds
+class TestToplevel(unittest.TestCase):
 
-def test_open_ctable():
-    with temp_dir() as temp:
-        # Create an table on disk
-        table_filename = os.path.join(temp, 'ctable')
-        p = params(storage=table_filename)
-        ds = dshape('1,{ x: int32; y: int32 }')
-        t = CTableSource(data=[(1, 1), (2, 2)], dshape=ds, params=p)
-        del t
+    def test_open_carray(self):
+        with temp_dir() as temp:
+            # Create an array on disk
+            array_filename = os.path.join(temp, 'carray')
+            p = params(storage=array_filename)
+            ds = dshape('1,int32')
+            a = CArraySource([2], dshape=ds, params=p)
+            del a
 
-        # Open table with open function
-        uri = 'ctable://' + table_filename
-        c = toplevel.open(uri)
-        assert c.datashape == ds
+            # Open array with open function
+            uri = 'carray://' + array_filename
+            c = toplevel.open(uri)
+            self.assertEqual(c.datashape, ds)
 
-        # Test delayed mode
-        c = toplevel.open(uri, eclass=eclass.delayed)
-        assert c.datashape == ds
+            # Test delayed mode
+            c = toplevel.open(uri, eclass=eclass.delayed)
+            self.assertEqual(c.datashape, ds)
+
+    def test_open_ctable(self):
+        with temp_dir() as temp:
+            # Create an table on disk
+            table_filename = os.path.join(temp, 'ctable')
+            p = params(storage=table_filename)
+            ds = dshape('1,{ x: int32; y: int32 }')
+            t = CTableSource(data=[(1, 1), (2, 2)], dshape=ds, params=p)
+            del t
+
+            # Open table with open function
+            uri = 'ctable://' + table_filename
+            c = toplevel.open(uri)
+            self.assertEqual(c.datashape, ds)
+
+            # Test delayed mode
+            c = toplevel.open(uri, eclass=eclass.delayed)
+            self.assertEqual(c.datashape, ds)
+
+tests.append(TestToplevel)
+
+#------------------------------------------------------------------------
+
+def run(verbosity=1, repeat=1):
+    suite = unittest.TestSuite()
+    for cls in tests:
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    return runner.run(suite)
+
+if __name__ == '__main__':
+    run()

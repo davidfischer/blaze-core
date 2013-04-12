@@ -1,7 +1,12 @@
+import unittest
+from unittest import skip
+
 from blaze.layouts.scalar import Interval, Chart, vstack,\
     hstack, dstack
 
-from unittest import skip
+tests = []
+
+#------------------------------------------------------------------------
 
 # dummy space
 class Space(object):
@@ -10,103 +15,123 @@ class Space(object):
     def __eq__(self, other):
         return self.n == other.n
 
-@skip
-def test_multiple_charts():
-    alpha = Space(1)
-    beta  = Space(2)
+#------------------------------------------------------------------------
 
-    a = Interval(0,2)
-    b = Interval(0,2)
+class TestCharts(unittest.TestCase):
 
-    x = Chart([a,b], alpha)
-    y = Chart([a,b], beta)
+    @skip('')
+    def test_multiple_charts(self):
+        alpha = Space(1)
+        beta  = Space(2)
 
-    # -------------
-    s = hstack(x,y)
-    # -------------
+        a = Interval(0,2)
+        b = Interval(0,2)
 
-@skip
-def test_vertical_stack():
-    alpha = Space(1)
-    beta  = Space(2)
+        x = Chart([a,b], alpha)
+        y = Chart([a,b], beta)
 
-    a = Interval(0,2)
-    b = Interval(0,2)
+        # -------------
+        s = hstack(x,y)
+        # -------------
 
-    x = Chart([a,b], alpha)
-    y = Chart([a,b], beta)
+    @skip('')
+    def test_vertical_stack(self):
+        alpha = Space(1)
+        beta  = Space(2)
 
-    # -------------
-    s = vstack(x,y)
-    # -------------
+        a = Interval(0,2)
+        b = Interval(0,2)
 
-    block, coords = s[[3,1]]
-    assert block == beta
-    assert coords == [1,1]
+        x = Chart([a,b], alpha)
+        y = Chart([a,b], beta)
 
-    block, coords = s[[0,0]]
-    assert block == alpha
-    assert coords == [0,0]
+        # -------------
+        s = vstack(x,y)
+        # -------------
 
-    block, coords = s[[1,0]]
-    assert block == alpha
-    assert coords == [1,0]
+        block, coords = s[[3,1]]
+        assert block == beta
+        assert coords == [1,1]
 
-    block, coords = s[[2,0]]
-    assert block == beta
-    assert coords == [0,0]
+        block, coords = s[[0,0]]
+        assert block == alpha
+        assert coords == [0,0]
 
-    block, coords = s[[2,1]]
-    assert block == beta
-    assert coords == [0,1]
+        block, coords = s[[1,0]]
+        assert block == alpha
+        assert coords == [1,0]
 
-@skip
-def test_horizontal_stack():
-    alpha = Space(1)
-    beta  = Space(2)
+        block, coords = s[[2,0]]
+        assert block == beta
+        assert coords == [0,0]
 
-    a = Interval(0,2)
-    b = Interval(0,2)
+        block, coords = s[[2,1]]
+        assert block == beta
+        assert coords == [0,1]
 
-    x = Chart([a,b], alpha)
-    y = Chart([a,b], beta)
+    @skip('')
+    def test_horizontal_stack(self):
+        alpha = Space(1)
+        beta  = Space(2)
 
-    # -------------
-    s = hstack(x,y)
-    # -------------
+        a = Interval(0,2)
+        b = Interval(0,2)
 
-    block, coords = s[[0,0]]
-    assert block == alpha
-    assert coords == [0,0]
+        x = Chart([a,b], alpha)
+        y = Chart([a,b], beta)
 
-    block, coords = s[[0,1]]
-    assert block == alpha
-    assert coords == [0,1]
+        # -------------
+        s = hstack(x,y)
+        # -------------
 
-    block, coords = s[[0,2]]
-    assert block == beta
-    assert coords == [0,0]
+        block, coords = s[[0,0]]
+        assert block == alpha
+        assert coords == [0,0]
 
-    block, coords = s[[2,4]]
-    assert block == beta
-    assert coords == [2,2]
+        block, coords = s[[0,1]]
+        assert block == alpha
+        assert coords == [0,1]
 
-@skip
-def test_third_axis():
-    alpha = Space(1)
-    beta  = Space(2)
+        block, coords = s[[0,2]]
+        assert block == beta
+        assert coords == [0,0]
 
-    a = Interval(0,2)
-    b = Interval(0,2)
-    c = Interval(0,2)
+        block, coords = s[[2,4]]
+        assert block == beta
+        assert coords == [2,2]
 
-    x = Chart([a,b,c], alpha)
-    y = Chart([a,b,c], beta)
+    @skip('')
+    def test_third_axis(self):
+        alpha = Space(1)
+        beta  = Space(2)
 
-    # -------------
-    s = dstack(x,y)
-    # -------------
+        a = Interval(0,2)
+        b = Interval(0,2)
+        c = Interval(0,2)
 
-    block, coords = s[[0,0,0]]
-    assert block == alpha
-    assert coords == [0,0,0]
+        x = Chart([a,b,c], alpha)
+        y = Chart([a,b,c], beta)
+
+        # -------------
+        s = dstack(x,y)
+        # -------------
+
+        block, coords = s[[0,0,0]]
+        assert block == alpha
+        assert coords == [0,0,0]
+
+tests.append(TestCharts)
+
+#------------------------------------------------------------------------
+
+def run(verbosity=1, repeat=1):
+    suite = unittest.TestSuite()
+    for cls in tests:
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    return runner.run(suite)
+
+if __name__ == '__main__':
+    run()
