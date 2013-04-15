@@ -1,3 +1,5 @@
+import unittest
+
 from textwrap import dedent
 from blaze.cgen.blirgen import *
 
@@ -7,21 +9,40 @@ from blaze.cgen.blirgen import *
 
 # Level 1 just tests syntatic construction.
 
-def test_compose():
-    x = Assign('a', '3')
-    y = Arg('int', 'a')
-    z = VarDecl('int', 'x', '0')
+class TestCgenLevel1(unittest.TestCase):
 
-    loop = For('x', Range('1', '2'), Block([x]))
+    def test_compose(self):
+        x = Assign('a', '3')
+        y = Arg('int', 'a')
+        z = VarDecl('int', 'x', '0')
 
-    body = Block([z, loop])
+        loop = For('x', Range('1', '2'), Block([x]))
 
-    fn = FuncDef(
-        name = 'kernel',
-        args = [y],
-        ret = 'void',
-        body = body,
-    )
+        body = Block([z, loop])
 
-    # XXX
-    assert str(fn) is not None
+        fn = FuncDef(
+            name = 'kernel',
+            args = [y],
+            ret = 'void',
+            body = body,
+        )
+
+        # XXX
+        assert str(fn) is not None
+
+
+tests.append(TestCgenLevel1)
+
+#------------------------------------------------------------------------
+
+def run(verbosity=1, repeat=1):
+    suite = unittest.TestSuite()
+    for cls in tests:
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    return runner.run(suite)
+
+if __name__ == '__main__':
+    run()
