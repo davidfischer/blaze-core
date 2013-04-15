@@ -12,6 +12,8 @@ from blaze.datashape.coretypes import NotNumpyCompatible,\
 
 from blaze.test_utils import assert_raises
 
+tests = []
+
 #------------------------------------------------------------------------
 # To NumPy
 #------------------------------------------------------------------------
@@ -38,6 +40,8 @@ class TestToNumPy(unittest.TestCase):
         with assert_raises(NotNumpyCompatible):
             to_numpy(dshape('Range(0, 3), int32'))
 
+tests.append(TestToNumPy)
+
 #------------------------------------------------------------------------
 # From NumPy
 #------------------------------------------------------------------------
@@ -49,3 +53,19 @@ class TestFromNumPy(unittest.TestCase):
 
         self.assertEqual(from_numpy((1,), np.int32), blaze.dshape('1, int32'))
         self.assertEqual(from_numpy((1,2), np.int32), blaze.dshape('1, 2, int32'))
+
+tests.append(TestFromNumPy)
+
+#------------------------------------------------------------------------
+
+def run(verbosity=1, repeat=1):
+    suite = unittest.TestSuite()
+    for cls in tests:
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    return runner.run(suite)
+
+if __name__ == '__main__':
+    run()
