@@ -1,7 +1,5 @@
-def runner():
-    import nose
-    argv = ['-s', 'blaze']
-    nose.run(argv=argv)
+def runner(heavy=True):
+    pass
 
 if __name__ == '__main__':
     runner()
