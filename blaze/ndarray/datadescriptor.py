@@ -1,6 +1,6 @@
 from blaze import byteproto as proto
 from ..datashape import dshape
-from byteprovider import ByteProvider
+from byteprovider import bytefactory
 
 #------------------------------------------------------------------------
 # Data Descriptor
@@ -18,7 +18,7 @@ class DataDescriptor(object):
     """
 
     def __init__(self, sources, dtype, indexfactory):
-        self.bytes = [ByteProvider(source) for source in sources]
+        self.bytes = [bytefactory(source) for source in sources]
         self.dshape = dshape(dtype)
         self.indexobj = indexfactory(bytes, dshape)
 
