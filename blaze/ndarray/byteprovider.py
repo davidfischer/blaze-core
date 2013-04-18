@@ -2,47 +2,93 @@
 ByteProvider base class.
 """
 
-from blaze.byteproto import READ, WRITE
-from datadescriptor import DataDescriptor
+# FIXME: for creating new read-write buffers
+import numpy as np
 
-class NoDataDescriptor(Exception):
-    pass
+from ..byteproto import READ, WRITE, CONST
+defaultN = 8000
 
+"""
+    The ByteProvider provides a wrapper around bytes.  The bytes can be from
+    any source imagineable.   ByteProviders are always 1 dimensional but they can be
+    a concatenation of multiple sources
+       * the original source (object referencing the source --- can be a list of sources
+         but STREAM source must be final source)
+       * a memory object that should be read from (data understandable by data-shape system)
+       * buflen = number of bytes of memory object
+       * the number of bytes for this object (-1 for STREAM)
+       * kind (STREAM, MEMORY, FILE, GPU)
+       
+       If a source is a dictionary, then a key of "source" is the source object and
+       the key "map" is a callable that returns a buffer object from the first argument
+       
+       READ -- can READ from
+       WRITE -- can WRITE to
+       CONST -- data is immutable
+
+    bytes should be accessed from the buffer object (which points either to the original source,
+    or buffers from it).
+"""
+
+# Default is just a single object which it creates a read-only buffer from
 class ByteProvider(object):
-    """
+    def __init__(self, obj):
+        self.original = obj
+        self.buffer = memoryview(obj)
+        self.buflen = len(self.buffer) * self.buffer.itemsize        
+        self.nbytes = self.buflen
+        self.flags = CONST | READ
+        
+    # Point self.buffer to the next chunk
+    #   limit any data-copy or file-read to N bytes
+    def nextchunk(self, N=defaultN): 
+        raise StopIteration
 
-    The ByteProvider provides the high-level API operations on those bytes
-    that abstracts away the notion of whether the object is contiguous,
-    chunked, or streamed and can extract or write bytes in any case.
+class NumPyBytes(ByteProvider):
+    def __init__(self, arr):
+        self.original = arr
+        self.buffer = memoryview(arr)
+        self.buflen = arr.nbytes
+        self.nbytes = self.buflen
+        self.flags = READ | (WRITE if arr.flags.writeable else 0)
 
-    If the DataDescriptor supports an operation natively then it can perform
-    it in a single "instruction", if it does not then the byte interface
-    will devise a way to do the operation as a sequence of instructions.
-    """
+class ValueBytes(ByteProvider):
+    def __init__(self, tup_or_N):
+        self.original = tup_or_N
+        val = 0
+        dt = 'B'
+        if isinstance(tup_or_N, tuple):
+            N = tup[0]
+            if len(tup) > 1:
+                val = tup[1]
+            if len(tup) > 2:
+                dt = tup[2]
+        else:
+            N = tup_or_N          
+        arr = np.empty(N, dtype=dt)
+        arr.fill(val)
+        
+        self.buffer = memoryview(arr)
+        self.buflen = arr.nbytes
+        self.nbytes = self.buflen
+        self.flags = READ | WRITE
 
-    def getbuffer(self):
-        raise NotImplementedError
+class FileBytes(ByteProvider):
+    def __init__(self, filespec):
+        if isinstance(filespec, file):
+            fid = filespec
+        elif isinstance(filespec, (str, unicode)):
+            fid = open(filespec, 'rb')
+        elif isinstance(filespec, tuple) and len(filespec) > 1:
+            fid = open(filespec[0], filespec[1]+'b')
 
-    def read_desc(self):
-        """ Returns the naive descriptor, which will be
-        speciazlied by execution """
-        raise NoDataDescriptor()
+        # Setup memory-map
+        # create memory view from a slice of the file
+        self._offset = 0
+        fid.seek(0,2)
+        self._filesize = fid.tell()
+        fid.seek(0)
+        self._mmap = mmap.mmap(fid.fileno(), 0)
 
-    def write_desc(self):
-        """ Returns the naive descriptor, which will be
-        speciazlied by execution """
-        raise NotImplementedError
-
-    def has_op(self, op, method):
-        if op == READ:
-            return method & self.read_capabilities
-        if op == WRITE:
-            return method & self.write_capabilities
-
-    @classmethod
-    def empty(self, datashape):
-        """
-        Create a empty container conforming to the given
-        datashape. Requires the ACCESS_ALLOC flag.
-        """
-        raise NotImplementedError
+        # Not finished...
+        
